@@ -1,0 +1,60 @@
+1. Set Up the Boilerplate code as per the project.
+
+2. to Upload json data to mongodb atlas set up a json file with all data.
+3. create a file populate.js to put all data to atlas.
+
+4. Set up functionality.
+
+5. Use express-async-errors modules from npm store for custom API errors or custom validator errors.
+6. Note : you should import it in app.js as => require('express-async-errors');
+7. express-async-errors also helps us as an async-wrapper as now we dont need to write functionality in try-catch block.
+
+8. App Completed !!! 
+
+*******************************************************************************
+
+# Functionality
+1. Use a queryObject = {}; 
+    to make find easy to use as if the query is not in queryObject app does not crashes.
+    app shows all objects at that time as : 
+        const products = await Products.find(queryObject);
+    is now like this :  
+        const products = await Products.find({});
+
+
+2. if (featured) {
+    queryObject.featured = featured === "true <IT'S A STRING>" ? true : false;
+  }
+
+3. OLD CODE :
+        const products = await Products.find()
+        res.status(201).json({ nbHits: products.length, products });
+   NEW CODE BY WHICH WE CAN ADD MORE FUNCTIONALITY :    
+        let result = Products.find();
+        const products = await result;
+        res.status(201).json({ nbHits: products.length, products }); 
+
+4. SORTING FUNCTIONALITY :
+
+   a. Products.find().limit(10) = limits the list
+   b. Products.find().sort("name -price") = limits the list as per property 
+                                            if name = +name => a to z
+                                            if name = -name => z to a
+                                            if price = +price => lower to upper
+                                            if price = -price => upper to lower
+
+
+   c. Products.find().select("name rating") = returns the list with given properties.
+   d. Products.find().skip(10) = skips first 10 elements.
+   
+5. Mongodb Query Operators :
+
+    a. Products.find({name : { $regex : 'table' , $options : 'i' }}) = returns all names that includes table in them.
+    b. Products.find({price : { $lt : 30 }}) = returns all prices that are less than 30.
+    c.     const operatorMap = {
+                    ">": "$gt",
+                    ">=": "$gte",
+                    "=": "$eq",
+                    "<": "$lt",
+                    "<=": "$lte",
+                    };

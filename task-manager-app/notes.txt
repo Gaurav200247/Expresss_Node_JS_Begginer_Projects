@@ -1,0 +1,51 @@
+# Middlewares :
+
+1. app.use(express.json()) => is for routes to exchange info between them.
+2. app.use("/api/v1/[name]",router) => is to set router to its base path. 
+3. app.use([Middleware]) => to use that Middleware.
+*************************************************************************************************
+
+# (req) and (res) Properties :
+1. req.params = returns an object of params used in link.
+2. req.body =  returns an objects of body passed to link.
+*************************************************************************************************
+
+# Mongoose Properties & Functionality :
+1. Export schema as => module.exports = mongoose.model('[MODELNAME]',[SCHEMA FUNCTION]).
+
+2. use Validators in Schema like : 
+    ->type = represents data type of schema variable like [boolean,string,number.....] 
+    ->required = represents wheather its value is required or not => required : [true,'ERROR MSG'],
+    ->default = represents the default value of schema variable. 
+    ->maxlength OR minlength= represents max or min length of variable => maxlength : [20,'ERROR MSG'],
+    ->trim = trims the value if some extra space is used before and after the variable value => trim:true,
+
+3. use mongoose queries like :
+    -> [SCHEMA_NAME].create(req.body) = to create a Document in collection.
+    
+    -> [SCHEMA_NAME].find() = to get all data from database of the collection.
+    
+    -> [SCHEMA_NAME].findOne({_id:id}) = to get a specific data from database of the collection.
+    
+    -> [SCHEMA_NAME].findOneAndUpdate({_id:id},req.body,{new:true,runValidators:true}) = to update a specific data and set validators rule again.
+
+    -> [SCHEMA_NAME].findOneAndDelete({_id:id}) = to delete a specific data and gets the data deleted in a variable.
+
+    NOTE :-                                                                     |            
+            Use if(!task){                                                      |
+                return res.status().json() // use return here its important     |
+            }                                                                   |
+
+*************************************************************************************************
+
+# DataBase SetUp :
+1. use => const ConnectDB = (url) => {return mongoose.connect(url)}; to connect to database.
+*************************************************************************************************
+
+# Theory Notes :
+1. CRUD => Create Read Update Delete.
+2. Mongoose is used to model DataBase and and functionality to API easily and effectively.   
+3. Express is used to make request and send responses easy.
+4. PUT method is used to replace the existing data by removing the already existing data and adding the given one.Use {{_id:ID},body,{overwrte : true}} in PUT functionality to make its work.
+5. PATCH method is used to update the data which needs to be updated without affecting the remaining data.  
+6. Error is a JS in-built class.

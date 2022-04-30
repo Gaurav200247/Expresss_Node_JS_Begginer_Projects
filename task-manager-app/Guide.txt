@@ -1,0 +1,29 @@
+1. Make package.json (npm init -y) and place public folder in same folder as on app.js.
+2. Install required modules (express dotenv mongoose express-async-errors nodemon[as dev dependency]).
+3. Make app listening on a port and create a .env and a .gitignore files.
+4. Use app.use(express.json()) and app.use('/api/v1/[name]',router) for routes.
+5. set up routes and controllers folder and make required file.
+6. set up an easy functionality in controllers first and then export it to routes.
+7. Make required routes and add functionality to them.
+8. Open Postman and create a folder and set up subfolder for each route by giving it a name.
+
+9. LogIn to MongoDB Atlas and click connect/then click to Connect your application /then copy the connection string paste it in .env file as MONOGO_URI name.
+10. Create DB (DataBase) folder and create connect.js file in it.
+11. create a function connect add it functionality in connect.js & make a function start in app.js and add its functionality and move app listening in it and call that function.
+
+12. Create a folder Model and make required file in it and make the schema design in it using mongoose and export it to controller file.
+
+13. Add Some Validators to Schema attributtes so garbage value can't be inserted in Document.
+14. In Controller file add more functionality to function using mongoose queries to make your API functional.
+15. Use Postman to Check functionality of CRUD operations.
+16. Functions Functionality in Controller should be Asynced and it should be in a try catch block (So, that if error comes app does not crashes).
+
+17. Add app.use(express().static('[public folder location]')) in app.js as a middleware above all middlewares to make public static file & variables connect to backend.
+
+18. Add app.use(notFound) in app.js and make a folder called middleware and create a notfound.js file to setup this middleware which is response for invalid routes.
+19. Make a file called asyncWrapper.js in middleware folder to make code less redundant (by removing try catch block) in controller's file.
+
+20. Make a errorHandlermiddleware and use app.use(errorHandlermiddleware) in app.js below all middlewares as above middlewares uses next() function to reach it and make your own error-show so user can't gets confused.
+21. Make a CustomErrors to specify the error when comes in Errors folder.
+
+22. App Completed !!
