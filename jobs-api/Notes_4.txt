@@ -1,0 +1,30 @@
+# Bcrypt JS :
+1. it is used to generate hashed password which looks like this : 
+                $2a$10$mgam52WsnH3DQBQPl4y.U.Y4m8ZvboYuYiPfg0Gl3RWAIWBfE/9tS
+   So, that if our database gets hacked the hacker is not able to get users passwords.
+
+2. use => const salt = await bcrypt.genSalt(<no. of rounds or random bits we want to create in passowrd>)
+                For ex : const salt = await bcrypt.genSalt(10);
+
+3. Now, Use => const hashedPassword = await bcrypt.hash(<passwordString>,<salt>)
+                For ex : const hashedPassword = await bcrypt.hash(passowrd,salt);
+
+*******************************************************************************************
+
+# Mongoose "Pre" Middleware :
+1. UserSchema.pre('save', async function(next){
+        const salt = await bcrypt.genSalt(10);
+        this.passowrd = await bcrypt.hash(this.passowrd,salt); 
+        // this points to schema's password
+        next();
+    })
+
+2. Used to make password hashed in model folder when created by which it makes code less redundant in controller.
+
+3. UserSchema = {   
+        name,email,passowrd
+    }
+    //for reference
+
+
+CONTNIUE WITH 7:50:00 .....     

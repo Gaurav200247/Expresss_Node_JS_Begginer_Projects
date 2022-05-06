@@ -1,0 +1,227 @@
+=> Aim : Making a jobs API with user authentication and saving user data( as user model followed by jobs model for jobs for a user). 
+
+=> Procedure : 
+    1. Create Boilerplate code.
+    2. make 2 routes one for jobs and one for users.
+    3. make 2 models one for jobs and one for users.
+    4. make 2 controllers one for jobs and one for users.
+
+***********************************************************************************************************************
+
+    # User Functionality :-
+
+    1. Construct User model including {name,email,password}.
+    2. Add regular expression in email property as match.
+
+                match: [
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+                "Please provide a valid E-mail",
+
+    3. In auth.js of controllers folder make user functionalitis => register and login.
+
+    -------------------------------------------------------------------------------------------------------------------
+    
+    4. In REGISTER function:
+
+        check that user has given correct credential using mongoose "pre" middleware in user.js in models as :
+        
+                            UserSchema.pre("save", async function (next) {
+                                const salt = await bcryptjs.genSalt(10);
+                                this.password = await bcryptjs.hash(this.password, salt);
+                                next();
+                            });
+
+                        as it gets called whenever we create a document in a model.
+                        This makes the given password encrypted.
+        4A. Now Add the Userdata to schema using : 
+
+                                const user = await User.create({ ...req.body });
+
+        4B. Now generate a jwt token for user authentication using  mongoose.methods in user.js in models folder as :
+
+                                UserSchema.methods.generateJWT = function () {
+                                return jwt.sign(
+                                    { userID: this._id, name: this.name },
+                                    process.env.JWT_SECRET,
+                                    { expiresIn: process.env.JWT_LIFETIME }
+                                );
+                                };
+
+        4C. Now send resp from server that user has been registered/created.
+
+
+    -------------------------------------------------------------------------------------------------------------------
+
+    5. Now make, LOGIN functionality :
+
+        5A. check that username and password given is correct in req.body
+        5B. Then find the user in user model using findOne mongoose function on the basis of email.
+        5C. Now comparing the encrypted password from schema with the decrypted one using mongoose.method is user.js in model.js as :
+
+                                UserSchema.methods.comaparePassword = async function (candidatePassword) {
+                                    const isMatch = await bcryptjs.compare(candidatePassword, this.password);
+                                    return isMatch;
+                                };
+
+        5D. Now checking that the decrpted password is correct w.r.t email.
+        5E. Now creating a jwt token with generateJWT() in user.js in models.
+        5F. Now send the resp with usertoken and userdetails. 
+
+***********************************************************************************************************************
+
+    # Jobs Functionality :-
+
+    1. Set Up auth middleware :
+    
+        5A. This middleware makes a variable as :
+                
+                            const authHeader =  req.headers.authorization;
+        
+        5B. Now we extract the token from authHeader and verify it using jwt.verify and decode it .
+        5C. Now we put the decoded info in req.user;
+        5D. Now set this middleware in app.js at jobs route as :
+                        
+                            app.use("/api/v1/jobs", auth, jobsRouter);
+
+ ----------------------------------------------------------------------------------------------------------------------
+
+
+    2. Construct Jobs model including ({company, position, status, createdBy},{timeStamps : true}); in which createdBy contains the _id of the User model the job is referenced to.
+    3. Due to auth.js middleware it is setted to all the jobs route we need to authorize all the functionality routes in POSTMAN.
+    4. Use this code in postman/User login route/in tests to make a global variable in postman as the user logins :
+
+                const jsonData = pm.response.json();
+                pm.globals.set("accessToken", jsonData.userToken);
+
+    5. Set Authorization with
+            type : Bearer token 
+            and add token as global variable {{accessToken}}. // do this for all jobs routes in POSTMAN.
+
+    6. Now due to auth.js req.user contains user's info we take that info in create jobs functionality and put createdBy as req.user.userID to tell Database that this job is referenced to which user :
+
+                        const CreateJob = async (req, res) => {
+                            req.body.createdBy = req.user.userID;
+                            const job = await Jobs.create(req.body);
+                            res.status(StatusCodes.CREATED).json({ job });
+                        };        
+    7. Same when we are using get request to get all jobs we need to find it using :
+
+                           const jobs = await Jobs.find({createdBy:{req.user.userID}}).sort("createdBy) 
+   
+    8. Set up C.R.U.D. functionality as : 
+                    
+                    const getSingleJob = async (req, res) => {
+                        const {
+                            user: { userID },
+                            params: { id: jobId },
+                        } = req; // nested destructuring
+
+                        const job = await Jobs.findOne({
+                            _id: jobId,
+                            createdBy: userID,
+                        });
+
+                        if (!job) {
+                            throw new notFound(`Job with id : ${jobId} not found !!`);
+                        }
+
+                        res.status(StatusCodes.OK).json({ job });
+                    };
+
+***********************************************************************************************************************
+    
+    # Set up User-friendly Error message of :
+                                             1. Mongoose Validator Error
+                                             2. Duplicate E-mail Error
+                                             3. Cast Error(invalid id syntax)
+
+        -> Set up custom-error middleware as by removing CustomAPIError from it and making a default object named as cutomErrors with a statuscode and msg keys : 
+
+                            const customError = {
+                                statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
+                                msg: err.message || "Something went wrong !!, Please try again later.",
+                            };        
+
+        -> Now Set up the functionality as per the error name or code so that user is able to get what error has occured easily.                                                     
+
+***********************************************************************************************************************
+
+    # Setting Up API Security :
+        1. Packages used : 
+            -> helmet : Helmet helps you secure your Express apps by setting various HTTP headers. It's not a silver bullet, but it can help.
+                        
+            -> cors :   CORS is a node.js package for providing a Connect/Express middleware that can be used to enable CORS with various options. CORS=>Cross-origin resource sharing (CORS) is a mechanism that allows restricted resources on a web page to be requested from another domain outside the domain from which the first resource was served.
+
+            -> xss-clean : This will sanitize any data in req.body, req.query, and req.params. You can also access the API directly if you don't want to use as middleware.
+
+            -> express-rate-limit : used to limit users acces(traffic).  
+        
+        2.  Use them in app.js as : 
+
+                    // setting proxy to 1
+                    app.set("trust proxy", 1);
+                    // rate limitter
+                    app.use(
+                    rateLimiter({
+                        windowMS: 15 * 60 * 1000, // 15 minutes
+                        max: 100, // limit each IP to 100 requests per windowMs
+                    })
+                    );
+                    // Middlewares
+                    app.use(express.json());
+
+                    // Extra Packages for api security
+                    app.use(cors());
+                    app.use(helmet());
+                    app.use(xss());
+
+***********************************************************************************************************************
+
+    # Deploying App on Heroku :
+            1. Make Heroku account.
+            2. Download Heroku CLI or Open terminal and run this command : npm i -g heroku
+            3. Make a git repo in app directory.
+            4. put this in package.json file :
+                    ,"engines":{
+                        "node":"<version of node (only first two digits)> .x"
+                    }
+            5. Make Procfile file (this file helps heroku that what type of app this is) in main project folder and add :
+
+                        web: node app.js
+
+            6. commit files to git repo.
+            7. Use this commands :  
+
+                     heroku login =>to login
+                     heroku create <app-name> => to create app
+                     git push heroku master     
+
+            8.  App Deployed.
+            9.  Add .env variable to heroku in their dashboard in settings
+            10. then go to more and click restart all dynos.
+            11. Then Open the APP.
+	        12. Check Your App using Postman by making a global variable of your app's url.	            
+
+***********************************************************************************************************************
+
+    # Setting Up Swagger Documentation :
+	    1. use =>npm i swagger-ui-express yamljs
+        2. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+           
