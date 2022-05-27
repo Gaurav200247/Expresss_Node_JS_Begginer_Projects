@@ -1,0 +1,91 @@
+# Project NOTES :
+
+1. Use http-status-codes to get status-codes without remembering them.
+2. Use jsonwebtoken module to make authorization of data and increase security.
+3. We used auth.js middleware to make code less redundant as we put the jwt.verify code in it.
+4. To use auth.js add next() in it and in router put it in forward of functionality function.
+    For Ex : 
+            const authMiddleware = require("../Middlewares/auth");
+            router.route("/dashboard").get(authMiddleware, dashboard);
+
+*************************************************************************************************************
+
+# JWT NOTES :
+
+1. JWT = Json Web Token => use => npm i jsonwebtoken => to install this package.
+2. Used to make encryption and add security (authorization) to server responses.
+3. A jwt token has three parts as xxxx.yyyy.zzzz => 
+                                                    here xxxx => headers.
+                                                    here yyyy => payload.
+                                                    here zzzz => signature. 
+
+4. Headers => consists of two parts => the type of the token, which is JWT, and the signing algorithm being used, such as HMAC SHA256 or RSA. Ex :- 
+                                        {
+                                        "alg": "HS256",
+                                        "typ": "JWT"
+                                        }
+
+5. Payload => The second part of the token is the payload, which contains the claims. Claims are statements about an entity (typically, the USER) and additional data. Fpr Ex :
+                                                                    {
+                                                                    "sub": "1234567890",
+                                                                    "name": "John Doe",
+                                                                    "admin": true
+                                                                    }
+                [ NOTE : Do not add password to claims as it can be decoded. ]
+
+6. Signature => To create the signature part you have to take the encoded header, the encoded payload, a secret, the algorithm specified in the header, and sign that.
+
+For example if you want to use the HMAC SHA256 algorithm, the signature will be created in the following way:
+
+                                            HMACSHA256(
+                                            base64UrlEncode(header) + "." +
+                                            base64UrlEncode(payload),
+                                            secret)   
+
+7. By putting all together jwt makes a token : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+
+[https://cdn.auth0.com/blog/legacy-app-auth/legacy-app-auth-5.png]
+
+
+
+8. To make a jwt token use => 
+                const token = jwt.sign({<PAYLOAD_DATA(with id)>},<JWT_SECRET_IN_ENV_FILE>,({<OPTIONS})); 
+    for ex:
+            const token = jwt.sign({ username, id }, process.env.JWT_SECRET, {
+                expiresIn: "30d",
+            });
+
+9. Now send it to req.headers(during post method) as  => Authorization : Bearer <JWT_TOKEN>;
+10. Now to access that token use =>
+                                    const authHeader = req.headers.authorization;
+                                    const token = authHeader.split(" ")[1];
+
+11. Now decode the token by verifying it by using =>
+                        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                        const { id, username } = decoded;
+                        req.user = { id, username };  
+                        // decoded data sent to req.user to access it. 
+
+[ NOTE : During verification the SIGNATURE gets Verified and PAYLOAD is given as output and Header tells about security used. ]
+
+*************************************************************************************************************
+
+# http-status-codes NOTES : 
+
+1. USE :
+        const CustomAPIError = require("./custom-errors");
+        const { StatusCodes } = require("http-status-codes");
+
+        class BadRequestError extends CustomAPIError {
+        constructor(message) {
+            super(message);
+            this.statusCode = StatusCodes.BAD_REQUEST; // USED HERE !!
+        }
+        }
+        module.exports = BadRequestError;
+
+
+
+
+
